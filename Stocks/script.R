@@ -50,15 +50,23 @@ create_portfolio <- function() {
     ));
 }
 
-add_row <- function(df, stock, action, year, month, day, price) {
+add_row <- function(df, stock, action, date, price) {
     rbind(df, data.frame(
-        stock, action, ISOdate(year, month, day), price
+        stock,
+        action,
+        date = as.Date(date, tz = "PST"),
+        price
     ))
 }
 
 portfolio <- create_portfolio()
-portfolio <- add_row(portfolio, "AMZN", "BUY", 2017, 1, 1, 749.23)
-portfolio <- add_row(portfolio, "MSFT", "BUY", 2017, 3, 1, 62.52)
+portfolio <- add_row(portfolio, "AMZN", "BUY", "2017-01-01", 749.23)
+portfolio <- add_row(portfolio, "MSFT", "BUY", "2017-03-03", 62.52)
 
-portfolio <- NULL
-# Read symbols
+write.csv(portfolio, "portfolio.csv", row.names = FALSE)
+
+# Read in a portfolio
+
+portfolio <- read.csv("portfolio.csv")
+
+
