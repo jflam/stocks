@@ -140,3 +140,31 @@ msft = getSymbols("MSFT", auto.assign = FALSE, from = start_date, to = end_date)
 # Let's do the simplified version of this where you can compare a portfolio of stocks
 # all purchased on a single start date with an index vs. buy/sell lots
 # That will be an exercise left to the reader :)
+
+symbols <- c("AMZN", "MSFT", "AAPL")
+get.symbol <- function(symbol) {
+    data <- getSymbols(symbol, auto.assign = FALSE, from = start_date, to = end_date)
+    return(dailyReturn(data))
+}
+
+portfolio.returns <- do.call(cbind, lapply(symbols, get.symbol))
+colnames(portfolio.returns) <- symbols
+
+# Asset allocation
+# starting_balance gets allocated across a range of stocks
+
+portfolio.symbols = c("AMZN", "MSFT", "AAPL")
+portfolio.proportion = c(0.10, 0.50, 0.40)
+portfolio.amounts = starting_balance * portfolio.proportion
+
+portfolio.dollar.returns <- portfolio.amounts * portfolio.returns
+daily.returns <- rowSums(portfolio.dollar.returns)
+portfolio.dollar.returns <- cbind(portfolio.dollar.returns, Totals = daily.returns)
+
+aggregate_return = sum(portfolio.dollar.returns$Totals)
+
+# Now compare against QQQ
+
+qqq <- get.symbol("QQQ")
+qqq.returns <- starting_balance * qqq
+aggregate.qqq.return <- sum(qqq.returns)
