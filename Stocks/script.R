@@ -16,6 +16,7 @@ install_if_not_present("ggvis")
 install_if_not_present("quantmod")
 install_if_not_present("highcharter")
 install_if_not_present("TTR")
+install_if_not_present("rhandsontable")
 
 # Quantmod package lets you download data
 # nice tutorial here: https://www.r-bloggers.com/a-guide-on-r-quantmod-package-how-to-get-started/
@@ -168,3 +169,13 @@ aggregate_return = sum(portfolio.dollar.returns$Totals)
 qqq <- get.symbol("QQQ")
 qqq.returns <- starting_balance * qqq
 aggregate.qqq.return <- sum(qqq.returns)
+
+# ShinySky examples
+
+library(shinysky)
+shinysky::run.shinysky.example()
+
+# Get stock ticker symbols
+
+symbols <- read.csv("symbols.csv")
+
