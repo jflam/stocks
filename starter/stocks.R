@@ -4,25 +4,45 @@
 library(quantmod)
 
 # We are comparing our performance against QQQ
-# which tracks the Nasdaq 100
+# which tracks the Nasdaq 100 index. Run the lines of code
+# below to get all the data from the beginning of the year.
 
 start.date <- "2017-01-01"
 QQQ <- getSymbols("QQQ", auto.assign = FALSE, from = start.date)
 
-# View this in variable explorer
-# Open table viewer
-# Export to Excel
+# View the contents of the data frame in variable explorer. Try:
+#
+# 1. Clicking on the chevron to the left of the QQQ variable to
+#    drill down into its internal structure.
+#
+# 2. Clicking on the hourglass icon to the right of the QQQ 
+#    variable to open up the data in the Data Table viewer.
+#
+# 3. Clicking on the Excel icon to the right of the QQQ variable
+#    to open the data frame in Excel.
+
 
 # Now lets plot QQQ for the YTD using the HighCharter package
+# You should see a chart open up in the default browser, showing
+# a plot of the Open, High, Low, and Close prices for each date.
 
 library(highcharter)
+
+# Notice the %>% operator. It's also known as the "pipe" operator
+# which lets you chain together multiple function calls into a 
+# single statement.
 
 highchart(type = "stock") %>%
     hc_add_series(QQQ, type = "ohlc")
 
-# Let's get another stock MSFT and plot that in a comparison chart
+# Next, let's grab data for another stock, MSFT, and create a chart
+# that compares the performance of MSFT vs. the QQQ S&P100 index.
 
 MSFT <- getSymbols("MSFT", auto.assign = FALSE, from = start.date)
+
+# Here, we generate a chart, showing both stocks head-to-head.
+# However, because the stock prices are at different scales, it's 
+# hard to see a clear analysis of their performance.
 
 highchart(type = "stock") %>%
     hc_add_series(QQQ, type = "ohlc") %>%

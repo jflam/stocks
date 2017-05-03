@@ -1,6 +1,5 @@
 library(shiny)
 library(highcharter)
-library(magrittr)
 library(rhandsontable)
 
 shinyUI(
