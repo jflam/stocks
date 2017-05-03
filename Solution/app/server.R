@@ -7,7 +7,9 @@ starting.investment = 100000
 start.date = "2017-01-01"
 
 compute.portfolio.daily.book.value <- function(portfolio, dollars) {
-    portfolio <- cbind(portfolio, dollars = portfolio$percentage * dollars)
+    portfolio <- cbind(
+        portfolio,
+        dollars = portfolio$percentage * dollars)
     df <- NULL
 
     compute.daily.book.value <- function(symbol, dollars) {
@@ -28,7 +30,10 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
         }
     }
 
-    mapply(compute.daily.book.value, portfolio$symbols, portfolio$dollars)
+    mapply(
+        compute.daily.book.value,
+        portfolio$symbols,
+        portfolio$dollars)
 
     # Compute totals for each day
 
@@ -52,7 +57,9 @@ function(input, output) {
 
         portfolio = hot_to_r(input$hot)
 
-        v$portfolio <- compute.portfolio.daily.book.value(portfolio, starting.investment)
+        v$portfolio <- compute.portfolio.daily.book.value(
+            portfolio,
+            starting.investment)
         v$index <- compute.portfolio.daily.book.value(
             data.frame(
                 symbols = c("QQQ"),
@@ -61,14 +68,17 @@ function(input, output) {
             ),
             starting.investment
         )
-        print(v$index)
     })
 
     output$chart <- renderHighchart({
         if (is.null(v$portfolio) || is.null(v$index)) return()
         highchart(type = "stock") %>%
-            hc_add_series(convert.totals.dataframe.to.xts(v$portfolio), name = "Portfolio") %>%
-            hc_add_series(convert.totals.dataframe.to.xts(v$index), name = "QQQ") %>%
+            hc_add_series(
+                data = convert.totals.dataframe.to.xts(v$portfolio),
+                name = "Portfolio") %>%
+            hc_add_series(
+                data = convert.totals.dataframe.to.xts(v$index),
+                name = "QQQ") %>%
             hc_add_theme(hc_theme_538())
     })
 
