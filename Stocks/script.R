@@ -179,3 +179,27 @@ shinysky::run.shinysky.example()
 
 symbols <- read.csv("symbols.csv")
 
+################
+
+# More experiments
+
+library(tidyquant)
+
+data(FANG)
+
+FANG.annual.returns <-
+    FANG %>%
+    group_by(symbol) %>%
+    tq_transmute(
+        select = adjusted,
+        mutate_fun = periodReturn,
+        period = "yearly",
+        type = "arithmetic")
+
+
+library(quantmod)
+
+QQQ = getSymbols("QQQ", auto.assign = FALSE, from = "2017-04-01")
+QQQ.daily.returns <- dailyReturn(QQQ)
+QQQ.shares  <- 100000/first(QQQ)
+QQQ.daily.profit.or.loss <- 
