@@ -3,7 +3,8 @@ library(quantmod)
 # We are comparing our performance against QQQ
 # which tracks the Nasdaq 100
 
-QQQ <- getSymbols("QQQ", auto.assign = FALSE, from = "2017-01-01")
+start.date <- "2017-01-01"
+QQQ <- getSymbols("QQQ", auto.assign = FALSE, from = start.date)
 
 # View this in variable explorer
 # Open table viewer
@@ -18,35 +19,17 @@ highchart(type = "stock") %>%
 
 # Let's get another stock MSFT and plot that in a comparison chart
 
-MSFT <- getSymbols("MSFT", auto.assign = FALSE, from = "2017-01-01")
+MSFT <- getSymbols("MSFT", auto.assign = FALSE, from = start.date)
 
 highchart(type = "stock") %>%
     hc_add_series(QQQ, type = "ohlc") %>%
     hc_add_series(MSFT) %>%
     hc_add_theme(hc_theme_538())
 
-# The scale is difficult to ascertain because we're plotting
-# the price of the stock, which doesn't correlate to its 
-# performance. 
-
-# 1. Discuss how dailyReturn function operates against xts
-# 2. Discuss how cumsum function operates against xts
-# 3. Discuss how to get help on these functions 
-
-starting.investment = 100000
-
-QQQ.cumulative <- cumsum(dailyReturn(QQQ) * starting.investment)
-MSFT.cumulative <- cumsum(dailyReturn(MSFT) * starting.investment)
-
-highchart(type = "stock") %>%
-    hc_add_series(QQQ.cumulative, name = "QQQ") %>%
-    hc_add_series(MSFT.cumulative, name = "MSFT") %>% 
-    hc_add_theme(hc_theme_538())
-
 # Let's examine the data again in QQQ. You can see that it contains
 # open, high, low, close, volume, and adjusted prices. 
 
-head(QQQ)
+View(as.data.frame(QQQ))
 
 # We really are only interested in the adjusted prices at close 
 # for the purposes of computing daily returns, which we can 
@@ -57,89 +40,108 @@ QQQ.adjusted <- Ad(QQQ)
 # Let's view the first few rows of the xts result set. We can see
 # that it contains both dates and the adjusted price for QQQ.
 
-head(QQQ.adjusted)
+View(as.data.frame(QQQ.adjusted))
 
-# Now, let's write a generic function that will return us 
-# the adjusted price of any stock.
+# Now let's compute returns by buying a certain number of shares of the stock
 
-start_date <- "2017-01-01"
+starting.investment = 100000
 
-get.daily.adjusted.price <- function(symbol) {
-    return(Ad(getSymbols(symbol, auto.assign = FALSE, from = start_date)))
+# Compute the number of shares we can buy by dividing starting investment by opening price
+
+MSFT.starting.shares = starting.investment / first(Op(MSFT))
+QQQ.starting.shares = starting.investment / first(Op(QQQ))
+
+# Now compute the daily adjusted book value of our shares
+# This is a vector * scalar which yields another vector
+
+MSFT.daily.book.value = Ad(MSFT) * MSFT.starting.shares
+QQQ.daily.book.value = Ad(QQQ) * QQQ.starting.shares
+
+highchart(type = "stock") %>%
+    hc_add_series(QQQ.daily.book.value, name = "QQQ") %>%
+    hc_add_series(MSFT.daily.book.value, name = "MSFT") %>%
+    hc_add_theme(hc_theme_538())
+
+# Now let's compute the book value based on the amount invested in a stock
+
+compute.daily.book.value <- function(symbol, dollars) {
+    symbol.data <- getSymbols(symbol, auto.assign = FALSE, from = start.date)
+    shares <- dollars / first(Op(symbol.data))
+    return(Ad(symbol.data) * shares)
 }
-
-# Let's get the adjusted price for AMZN
-
-QQQ.adjusted <- get.daily.adjusted.price("QQQ")
-head(QQQ.adjusted)
 
 # Now, let's get the daily returns, expressed as a percentage
 # gain or loss, based on the adjusted prices
 
-QQQ.daily.returns <- dailyReturn(QQQ.adjusted)
-head(QQQ.daily.returns)
-
-# Let's write a new function to compute daily returns for a symbol
-
-get.daily.returns <- function(symbol) {
-    return(dailyReturn(get.daily.adjusted.price(symbol)))
-}
+QQQ.daily.book.value <- compute.daily.book.value("QQQ", starting.investment)
+View(as.data.frame(QQQ.daily.book.value))
 
 # Let's test it on TSLA
 
-TSLA.daily.returns <- get.daily.returns("TSLA")
-head(TSLA.daily.returns)
+TSLA.daily.book.value <- compute.daily.book.value("TSLA", starting.investment)
+View(TSLA.daily.book.value)
 
 TSLA.cumulative.returns <- cumsum(TSLA.daily.returns * starting.investment)
 head(TSLA.cumulative.returns)
 
-# Now let's do the same thing for a portfolio
+# Now let's do the same thing for an equal weight portfolio of FANG
 
-portfolio.symbols <- c("AMZN", "MSFT", "TSLA")
+portfolio <- data.frame(
+    symbols = c("FB", "AMZN", "NFLX", "GOOG"),
+    percentage = c(0.25, 0.25, 0.25, 0.25),
+    stringsAsFactors = FALSE)
 
-# Let's compute the daily returns for the stocks in
-# portfolio.symbols. Note that iteration in R is done via
-# lapply, not via loops.
-# TODO: explain this better
+# We need to adjust our daily book value function to compute against portfolio of stocks
 
-portfolio.daily.returns <- do.call(cbind, lapply(portfolio.symbols, get.daily.returns))
+compute.portfolio.daily.book.value <- function(portfolio, dollars) {
+    portfolio <- cbind(portfolio, dollars = portfolio$percentage * dollars)
+    df <- NULL
 
-# Assign the column names to be the same as the symbols
+    compute.daily.book.value <- function(symbol, dollars) {
 
-colnames(portfolio.daily.returns) <- portfolio.symbols
+        symbol.data <- getSymbols(
+            symbol,
+            auto.assign = FALSE,
+            from = start.date)
 
-# Now let's define the asset allocation of our initial 
-# starting investment amount, allocated across all of the
-# stocks in portfolio.symbols:
+        shares <- dollars / first(Op(symbol.data))
+        book.value <- Ad(symbol.data) * shares
 
-portfolio.proportion = c(0.40, 0.20, 0.40)
-portfolio.starting.amounts = portfolio.proportion * starting.investment
+        if (is.null(df)) {
+            df <<- data.frame(book.value)
+        }
+        else {
+            df <<- cbind(df, data.frame(book.value))
+        }
+    }
 
-# Now let's compute the cumulative returns by summing over
-# all of the rows in the columns
+    mapply(compute.daily.book.value, portfolio$symbols, portfolio$dollars)
 
-portfolio.cumulative.gains <- cumsum(portfolio.daily.returns * portfolio.starting.amounts)
+    # Compute totals for each day
 
-# Create a new column from summing over each rows for 
-# the daily cumulative gain for the symbol
+    df <- cbind(df, data.frame(Total = rowSums(df)))
+    return(df)
+}
 
-portfolio.cumulative.gains <- cbind(portfolio.cumulative.gains,
-                                    Total = rowSums(portfolio.cumulative.gains))
+portfolio.daily.book.value <- compute.portfolio.daily.book.value(portfolio, starting.investment)
 
-# Now do the same cumulative gain computation for QQQ
+index <- data.frame(
+    symbols = c("QQQ"),
+    percentage = c(1.0),
+    stringsAsFactors = FALSE)
 
-QQQ.cumulative.gains <- cumsum(QQQ.daily.returns * starting.investment)
-head(QQQ.cumulative.gains)
+index.daily.book.value <- compute.portfolio.daily.book.value(index, starting.investment)
 
 # Now let's plot the two curves against each other
-
+# This loses the date labels - better to remove columns?
+a = xts(index.daily.book.value$Total, as.POSIXct(rownames(index.daily.book.value)))
+b = xts(portfolio.daily.book.value$Total, as.POSIXct(rownames(portfolio.daily.book.value)))
 highchart(type = "stock") %>%
-    hc_add_series(QQQ.cumulative.gains, name = "QQQ") %>%
-    hc_add_series(portfolio.cumulative.gains$Total, name = "Portfolio") %>%
+    hc_add_series(a, name = "QQQ") %>%
+    hc_add_series(b, name = "Portfolio") %>%
     hc_add_theme(hc_theme_538())
 
 # Now the next step in this is to turn this analysis into an applicatoin
 # where you can pick the stocks to add to your asset allocation and their 
 # proportions. The constraint is that they must add up to 100% in your allocation.
 # Hit the compute button to generate the results.
-
