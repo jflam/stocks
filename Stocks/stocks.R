@@ -48,8 +48,8 @@ starting.investment = 100000
 
 # Compute the number of shares we can buy by dividing starting investment by opening price
 
-MSFT.starting.shares = starting.investment / first(Op(MSFT))
-QQQ.starting.shares = starting.investment / first(Op(QQQ))
+MSFT.starting.shares = starting.investment / as.numeric(first(Op(MSFT)))
+QQQ.starting.shares = starting.investment / as.numeric(first(Op(QQQ)))
 
 # Now compute the daily adjusted book value of our shares
 # This is a vector * scalar which yields another vector
@@ -104,7 +104,7 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
             auto.assign = FALSE,
             from = start.date)
 
-        shares <- dollars / first(Op(symbol.data))
+        shares <- dollars / as.numeric(first(Op(symbol.data)))
         book.value <- Ad(symbol.data) * shares
 
         if (is.null(df)) {
@@ -134,11 +134,14 @@ index.daily.book.value <- compute.portfolio.daily.book.value(index, starting.inv
 
 # Now let's plot the two curves against each other
 # This loses the date labels - better to remove columns?
-a = xts(index.daily.book.value$Total, as.POSIXct(rownames(index.daily.book.value)))
-b = xts(portfolio.daily.book.value$Total, as.POSIXct(rownames(portfolio.daily.book.value)))
+
+convert.totals.dataframe.to.xts <- function(df) {
+    return(xts(df$Total, as.POSIXct(rownames(df))))
+}
+
 highchart(type = "stock") %>%
-    hc_add_series(a, name = "QQQ") %>%
-    hc_add_series(b, name = "Portfolio") %>%
+    hc_add_series(convert.totals.dataframe.to.xts(index.daily.book.value), name = "QQQ") %>%
+    hc_add_series(convert.totals.dataframe.to.xts(portfolio.daily.book.value), name = "Portfolio") %>%
     hc_add_theme(hc_theme_538())
 
 # Now the next step in this is to turn this analysis into an applicatoin

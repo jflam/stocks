@@ -8,7 +8,7 @@ shinyUI(
         tags$link(rel = "stylesheet", type = "text/css", href = "https://bootswatch.com/paper/bootstrap.css"),
         fluidRow(
             column(width = 3, class = "panel",
-                actionButton("go", label = "Go"),
+                actionButton("go", label = "Plot returns vs. QQQ"),
                 rHandsontableOutput("hot")
             ),
             column(width = 9,

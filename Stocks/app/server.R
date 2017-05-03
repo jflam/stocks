@@ -6,16 +6,6 @@ library(rhandsontable)
 starting.investment = 100000
 start.date = "2017-01-01"
 
-create.starting.portfolio <- function() {
-    portfolio.symbols <- c("AMZN", "MSFT", "TSLA")
-    portfolio.percentage = c(0.40, 0.20, 0.40)
-    df = data.frame(
-        symbols = portfolio.symbols,
-        percentage = portfolio.percentage,
-        stringsAsFactors = FALSE)
-    return(df)
-}
-
 compute.portfolio.daily.book.value <- function(portfolio, dollars) {
     portfolio <- cbind(portfolio, dollars = portfolio$percentage * dollars)
     df <- NULL
@@ -27,7 +17,7 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
             auto.assign = FALSE,
             from = start.date)
 
-        shares <- dollars / first(Op(symbol.data))
+        shares <- dollars / as.numeric(first(Op(symbol.data)))
         book.value <- Ad(symbol.data) * shares
 
         if (is.null(df)) {
@@ -42,8 +32,11 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
 
     # Compute totals for each day
 
-    df <- cbind(df, data.frame(Total = rowSums(df)))
-    return(df)
+    return(cbind(df, data.frame(Total = rowSums(df))))
+}
+
+convert.totals.dataframe.to.xts <- function(df) {
+    return(xts(df$Total, as.POSIXct(rownames(df))))
 }
 
 function(input, output) {
@@ -74,8 +67,8 @@ function(input, output) {
     output$chart <- renderHighchart({
         if (is.null(v$portfolio) || is.null(v$index)) return()
         highchart(type = "stock") %>%
-            hc_add_series(v$portfolio$Total, name = "Portfolio") %>%
-            hc_add_series(v$index$Total, name = "QQQ") %>%
+            hc_add_series(convert.totals.dataframe.to.xts(v$portfolio), name = "Portfolio") %>%
+            hc_add_series(convert.totals.dataframe.to.xts(v$index), name = "QQQ") %>%
             hc_add_theme(hc_theme_538())
     })
 
@@ -83,7 +76,10 @@ function(input, output) {
         if (!is.null(input$hot)) {
             portfolio = hot_to_r(input$hot)
         } else {
-            portfolio = create.starting.portfolio()
+            portfolio = data.frame(
+                symbols = c("FB", "AMZN", "NFLX", "GOOG"),
+                percentage = c(0.25, 0.25, 0.25, 0.25),
+                stringsAsFactors = FALSE)
         }
 
         rhandsontable(portfolio) %>%
