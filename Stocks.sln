@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26410.1
+VisualStudioVersion = 15.0.26228.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Stocks", "Stocks\Stocks.rxproj", "{F2FD6DE4-094D-4D64-9544-854D62E4F04E}"
+EndProject
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "Starter", "Starter\Starter.rxproj", "{8F371CA3-E5AA-40D9-8E42-D962D271071F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F2FD6DE4-094D-4D64-9544-854D62E4F04E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2FD6DE4-094D-4D64-9544-854D62E4F04E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2FD6DE4-094D-4D64-9544-854D62E4F04E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F371CA3-E5AA-40D9-8E42-D962D271071F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F371CA3-E5AA-40D9-8E42-D962D271071F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F371CA3-E5AA-40D9-8E42-D962D271071F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F371CA3-E5AA-40D9-8E42-D962D271071F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
