@@ -35,8 +35,6 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
         portfolio$symbols,
         portfolio$dollars)
 
-    # Compute totals for each day
-
     return(cbind(df, data.frame(Total = rowSums(df))))
 }
 
