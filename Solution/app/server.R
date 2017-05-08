@@ -6,13 +6,13 @@ library(rhandsontable)
 starting.investment = 100000
 start.date = "2017-01-01"
 
-compute.portfolio.daily.book.value <- function(portfolio, dollars) {
+compute.portfolio.daily.market.value <- function(portfolio, dollars) {
     portfolio <- cbind(
         portfolio,
         dollars = portfolio$percentage * dollars)
     df <- NULL
 
-    compute.daily.book.value <- function(symbol, dollars) {
+    compute.daily.market.value <- function(symbol, dollars) {
 
         symbol.data <- getSymbols(
             symbol,
@@ -20,29 +20,25 @@ compute.portfolio.daily.book.value <- function(portfolio, dollars) {
             from = start.date)
 
         shares <- dollars / as.numeric(first(Op(symbol.data)))
-        book.value <- Ad(symbol.data) * shares
+        market.value <- Ad(symbol.data) * shares
 
         if (is.null(df)) {
-            df <<- data.frame(book.value)
+            df <<- data.frame(market.value)
         }
         else {
-            df <<- cbind(df, data.frame(book.value))
+            df <<- cbind(df, data.frame(market.value))
         }
     }
 
     mapply(
-        compute.daily.book.value,
+        compute.daily.market.value,
         portfolio$symbols,
         portfolio$dollars)
 
     return(cbind(df, data.frame(Total = rowSums(df))))
 }
 
-convert.totals.dataframe.to.xts <- function(df) {
-    return(xts(df$Total, as.POSIXct(rownames(df))))
-}
-
-function(input, output) {
+shinyServer(function(input, output) {
 
     v <- reactiveValues(portfolio = NULL, index = NULL)
 
@@ -55,10 +51,10 @@ function(input, output) {
 
         portfolio = hot_to_r(input$hot)
 
-        v$portfolio <- compute.portfolio.daily.book.value(
+        v$portfolio <- compute.portfolio.daily.market.value(
             portfolio,
             starting.investment)
-        v$index <- compute.portfolio.daily.book.value(
+        v$index <- compute.portfolio.daily.market.value(
             data.frame(
                 symbols = c("QQQ"),
                 percentage = c(1.0),
@@ -67,6 +63,10 @@ function(input, output) {
             starting.investment
         )
     })
+
+    convert.totals.dataframe.to.xts <- function(df) {
+        return(xts(df$Total, as.POSIXct(rownames(df))))
+    }
 
     output$chart <- renderHighchart({
         if (is.null(v$portfolio) || is.null(v$index)) return()
@@ -93,4 +93,4 @@ function(input, output) {
         rhandsontable(portfolio) %>%
             hot_table(highlightCol = TRUE, highlightRow = TRUE)
     })
-}
+})
